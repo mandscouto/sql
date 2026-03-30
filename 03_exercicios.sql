@@ -28,3 +28,15 @@ LEFT JOIN produtos AS t3 ON t2.IdProduto = t3.IdProduto
 LEFT JOIN clientes AS t4 ON t1.IdCliente = t4.idCliente
 WHERE t1.DtCriacao >= '2025-08-25' AND t1.DtCriacao < '2025-08-30' AND t3.DescNomeProduto = 'Lista de presença';
 
+
+-- Clientes mais antigos, tem mais frequência de transação?
+SELECT t1.IdCliente,
+        max(julianday('now') - julianday(substr(t1.DtCriacao,1,19))) AS idadeBase,
+        count(t2.IdTransacao) AS qtdeTransacoes
+
+FROM clientes AS t1
+
+LEFT JOIN transacoes AS t2
+ON t1.IdCliente = t2.idCliente
+
+GROUP BY t1.IdCliente;
