@@ -1,3 +1,27 @@
+-- Qual foi a taxa de retenção e a curva de Churn do curso de SQL?
+WITH tb_d1 AS (
+    SELECT DISTINCT idCliente
+    FROM transacoes
+    WHERE DtCriacao >= '2025-08-25'
+    AND DtCriacao < '2025-08-26'
+),
+
+tb_join AS (
+    SELECT
+        substr(t2.DtCriacao,1,10) AS dataDia,
+        count(DISTINCT t1.idCliente) AS qtdeClientes,
+        1. * count(DISTINCT t1.idCliente) / (SELECT count(*) FROM tb_d1) AS retencao,
+        1 - 1. * count(DISTINCT t1.idCliente) / (SELECT count(*) FROM tb_d1) AS churn
+    FROM tb_d1 AS t1
+    LEFT JOIN transacoes AS t2
+    ON t1.idCliente = t2.idCliente
+    WHERE t2.DtCriacao >= '2025-08-25'
+    AND t2.DtCriacao < '2025-08-30'
+    GROUP BY dataDia
+)
+
+SELECT * FROM tb_join;
+
 -- Qual o dia com maior engajamento de cada aluno que iniciou o curso no dia 01?
 WITH tb_primeiro_dia AS (
     SELECT DISTINCT idCliente
@@ -31,23 +55,24 @@ GROUP by idCliente;
 
 WITH tb_clientes_janeiro AS (
     SELECT idCliente
-    FROM clientes
+    FROM transacoes
     WHERE substr(DtCriacao,1,10) >= '2025-01-01'
     AND substr(DtCriacao,1,10) < '2025-02-01'
 ),
 
 tb_clientes_sql AS (
-    SELECT idCliente
+    SELECT DISTINCT idCliente
     FROM transacoes
-    WHERE substr(DtCriacao,1,10) >= '2025-08-25'
-    AND substr(DtCriacao,1,10) < '2025-08-30'
+    WHERE DtCriacao >= '2025-08-25'
+    AND DtCriacao < '2025-08-30'
 ),
 
 tb_join AS (
-    SELECT DISTINCT t1.idCliente
+    SELECT count(DISTINCT t1.idCliente) AS clientesJaneiro,
+        count(DISTINCT t2.idCliente) AS clientesCurso
     FROM tb_clientes_janeiro AS t1
-    INNER JOIN tb_clientes_sql AS t2
+    LEFT JOIN tb_clientes_sql AS t2
     ON t1.idCliente = t2.idCliente
 )
 
-SELECT count(*) as contagemClientes from tb_join;
+SELECT * from tb_join;
