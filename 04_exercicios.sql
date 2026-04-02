@@ -23,34 +23,42 @@ tb_join AS (
 SELECT * FROM tb_join;
 
 -- Qual o dia com maior engajamento de cada aluno que iniciou o curso no dia 01?
-WITH tb_primeiro_dia AS (
+WITH alunos_d1 AS (
     SELECT DISTINCT idCliente
     FROM transacoes
     WHERE substr(DtCriacao,1,10) = '2025-08-25'
 ),
 
-tb_dias_curso AS (
-    SELECT DISTINCT idCliente, substr(DtCriacao,1,10) AS diasCurso, IdTransacao
-    FROM transacoes
-    WHERE substr(DtCriacao,1,10) >= '2025-08-25'
-    AND substr(DtCriacao, 1, 10) < '2025-08-30'
-    ORDER by IdTransacao
+tb_engajamento AS (
+    SELECT t1.idCliente,
+        substr(t2.DtCriacao,1,10) AS dataDia,
+        count(*) AS qtdeInteracoes
+    FROM alunos_d1 AS t1
+    LEFT JOIN transacoes AS t2
+    ON t1.idCliente = t2.idCliente
+    AND t2.DtCriacao >= '2025-08-25'
+    AND t2.DtCriacao < '2025-08-30'
+    GROUP BY t1.idCliente, substr(t2.DtCriacao, 1,10)
+    ORDER BY t1.idCliente, dataDia
+),
+
+max_inter AS (
+    SELECT max(qtdeInteracoes) AS maxInter, idCliente
+    FROM tb_engajamento
+    GROUP by idCliente
 ),
 
 tb_join AS (
-    SELECT count(DISTINCT t2.IdTransacao) AS contagemTransacoes, t2.diasCurso, t1.idCliente
-    FROM tb_primeiro_dia AS t1
-    INNER JOIN tb_dias_curso AS t2
+    SELECT DISTINCT t1.idCliente, max(t2.dataDia) as maxDia, max(maxInter)
+    FROM max_inter AS t1
+    LEFT JOIN tb_engajamento AS t2
     ON t1.idCliente = t2.idCliente
-    GROUP by t1.idCliente
+    AND t1.maxInter = t2.qtdeInteracoes
+    GROUP BY t1.idCliente
+    ORDER BY t1.idCliente, t2.dataDia
 )
 
-
-SELECT *
-FROM tb_join
-GROUP by idCliente;
-
-
+SELECT * FROM tb_join;
 -- Dentre os clientes de janeiro/2025, quantos assistiram o curso de SQL?
 
 WITH tb_clientes_janeiro AS (
