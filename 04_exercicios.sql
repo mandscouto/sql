@@ -56,9 +56,15 @@ tb_join AS (
     AND t1.maxInter = t2.qtdeInteracoes
     GROUP BY t1.idCliente
     ORDER BY t1.idCliente, t2.dataDia
+),
+
+tb_rn AS (
+    SELECT *,
+        row_number() OVER (PARTITION BY idCliente ORDER BY qtdeInteracoes) AS rn
+    FROM tb_engajamento
 )
 
-SELECT * FROM tb_join;
+SELECT * FROM tb_rn WHERE rn = 1;
 -- Dentre os clientes de janeiro/2025, quantos assistiram o curso de SQL?
 
 WITH tb_clientes_janeiro AS (
